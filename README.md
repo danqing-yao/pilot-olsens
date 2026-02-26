@@ -151,7 +151,15 @@ barnebys-pilot-olsens-analysis/
 **Full Technical Documentation (Google Docs):**  
 🔗 https://docs.google.com/document/d/1xyQ4oq-Y7hGf1vLuLIvLmRXMm5dx2zQ1WeLDUqG5z9U/edit?usp=sharing
 
-Covers: business context · data architecture · processing logic · metrics definitions · limitations · SQL reference · long-term strategy · appendix
+Covers: 
+- Executive Summary
+- Business Context
+- Data Architecture
+- Data Processing Logic
+- Metrics Definition
+- Known Issues & Limitations
+- SQL Scripts Reference
+- Dashboard
 
 ---
 
@@ -228,6 +236,18 @@ Skeleton settles commission based on `auction enddate`, not individual bid times
 | Skeleton (auction enddate) | Jan 2025 – Dec 2025 |
 
 ---
+## 📚 Dashboard
+
+Access: https://lookerstudio.google.com/reporting/5d20a2f5-d762-43d1-bb2f-94e366ff3c16
+
+**How to Refresh
+- Re-run SQL script
+- Open Looker Studio dashboard
+- Click Refresh data on the data source connected to barnebys-skeleton.pilot_olsens
+
+
+---
+
 
 ## 📈 Next Steps
 
@@ -238,7 +258,7 @@ Skeleton settles commission based on `auction enddate`, not individual bid times
 
 ## 📝 Changelog
 
-### v1.0 — 2025-02-25
+### v1.0 — 2025-02-26
 - Initial release
 - Complete data processing pipeline
 - Summary metrics by user source
