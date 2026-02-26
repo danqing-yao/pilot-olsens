@@ -6,14 +6,13 @@
 This repository contains SQL scripts and documentation for analyzing Olséns Auctioner (programId: 3687) data to measure the value of Barnebys users compared to other traffic sources.
 
 **Key Metrics Analyzed**:
-- User engagement (clicks, registrations, bids)
-- Conversion rates (bidders → winners)
-- Revenue attribution (winning value, commissions)
+- User engagement (clicks, registrations, bids, winner)
 - Bidding behavior (price, Category)
+- Revenue attribution (winning value, commissions)
 
 **Time Period**: 2025 (excluding June-July 2025)  
 **Data Platform**: Google BigQuery  
-**Dataset**: `barnebys-skeleton.barnebys_pilot_olsens_3687`(My own project)
+**Dataset**: `barnebys-skeleton.pilot_olsens`(My own project)
 
 ---
 
@@ -23,9 +22,9 @@ This repository contains SQL scripts and documentation for analyzing Olséns Auc
 |--------|----------|-------|-----------|-------|
 | **Clicks** | 49,007 | - | - | 49,007 |
 | **Registered Users** | 1,123 | 1,236 | - | 2,359 |
-| **Bidders** | 2,153 | 2,353 | 9 | 4.515 |
-| **Winners** | 1,185 | 1,268 | 60 | 2,513 |
-| **Winning Value** | 4,008,950 | 10,428,700 | 178,650 | 14,616,300 |
+| **Bidders** | 2,116 | 2,356 | 10 | 4.482 |
+| **Winners** | 1,179 | 1,265 | 57 | 2,501 |
+| **Winning Value** | 3,955,850 | 10,385,300 | 167,900 | 14,509,050 |
 
 ---
 
@@ -36,7 +35,7 @@ This repository contains SQL scripts and documentation for analyzing Olséns Auc
 - Access to Azure Barnebys Mysql database `barnebys`
 - Access to AWS Mysql database `barnebys`
 - Permissions to access Skeleton's dataset `olsens`
-- Permissions to read from dataset `barnebys_pilot_olsens_3687`
+- Permissions to read from BigQuery dataset `pilot_olsens`
 
 ### Run the Analysis
 
@@ -47,27 +46,29 @@ bq query < sql/01_raw_layer/bite_raw_clicks.sql
 bq query < sql/01_raw_layer/bite_raw_registrations.sql
 bq query < sql/01_raw_layer/bite_raw_bids.sql
 bq query < sql/01_raw_layer/skeleton_raw_auctions.sql
-bq query < sql/01_raw_layer/skeleton_raw_hammer_initial_price.sql
 bq query < sql/01_raw_layer/skeleton_raw_enteredbids.sql
 bq query < sql/01_raw_layer/aws_barnebys_raw_lots.sql
 bq query < sql/01_raw_layer/azure_barnebys_raw_lots.sql
 
+# Step 2: Data Cleaning & Matching
+bq query < sql/01_raw_layer/raw_bite_bids_clean.sql
+bq query < sql/02_processed_layer/proc_skeleton_auctions_with_bite_bids.sql
 
-# Step 2: Data Cleaning & Completion
-bq query < sql/02_processed_layer/proc_bids_cleaned_complete.sql
+# Step 3: Source Inference & Winning Attribution
+bq query < sql/02_processed_layer/proc_skeleton_auctions_with_enteredbids.sql
+bq query < sql/02_processed_layer/proc_skeleton_auctions_with_winning.sql
 
-# Step 3: User Matching & Source Inference
-bq query < sql/02_processed_layer/temp_bids_enteredbid_match_complete.sql
-
-# Step 4: Winning Attribution
-bq query < sql/03_analytics_layer/proc_bids_with_winning_v3_complete.sql
-
-# Step 5: Generate Summary Metrics
-bq query < sql/03_analytics_layer/ana_summary_by_user_source.sql
-
+# Step 4: Generate Summary Metrics
+bq query < sql/03_analytics_layer/ana_funnel_olsens_exclued67.sql
+bq query < sql/03_analytics_layer/ana_lot_price_tiers.sql
+bq query < sql/03_analytics_layer/ana_bids_with_price_tier.sql
+bq query < sql/03_analytics_layer/ana_winning_bids_with_price_tier.sql
+bq query < sql/03_analytics_layer/ana_barnebys_increment.sql
 
 **Or run directly in BigQuery Console**:  
 Copy-paste each script from the `sql/` directory into the BigQuery editor and execute in order.
+
+# Step 5: Generate Dashboard in Looker Studio
 
 ---
 
@@ -77,21 +78,34 @@ barnebys-pilot-olsens-analysis/
 ├── README.md                          # This file
 ├── sql/
 │   ├── 01_raw_layer/
-│   │   └── (raw data table definitions - if needed)
+│   │   └── bite_raw_clicks
+│   │   └── bite_raw_registrations
+│   │   └── bite_raw_bids.sql
+│   │   └── skeleton_raw_auctions.sql
+│   │   └── skeleton_raw_enteredbids.sql
+│   │   └── aws_barnebys_raw_lots.sql
+│   │   └── azure_barnebys_raw_lots.sql
+│   │   └── auction_house.csv
 │   ├── 02_processed_layer/
-│   │   ├── proc_bids_cleaned_complete.sql
-│   │   └── temp_bids_enteredbid_match_complete.sql
+│   │   ├── raw_bite_bids_clean.sql
+│   │   └── proc_skeleton_auctions_with_bite_bids.sql
+│   │   └── proc_skeleton_auctions_with_enteredbids.sql
+│   │   └── proc_skeleton_auctions_with_winning.sql
 │   ├── 03_analytics_layer/
-│   │   ├── proc_bids_with_winning_v3_complete.sql
-│   │   └── ana_create_summary_by_user_source.sql
-
+│   │   ├── ana_funnel_olsens_exclued67.sql
+│   │   ├── ana_lot_price_tiers.sql
+│   │   └── ana_bids_with_price_tier.sql
+│   │   ├── ana_winning_bids_with_price_tier.sql
+│   │   ├── ana_barnebys_increment.sql
 ├── docs/
 │   ├── data-architecture.md           # Data architecture details
 │   ├── data-dictionary.md             # Field definitions
 │   ├── processing-logic.md            # Key algorithms explained
 │   └── changelog.md                   # Version history
 └── diagrams/
-    └── data-flow.mmd                  # Mermaid diagram source
+│   └── data-flow.mmd                  # Mermaid diagram source
+└── Dashboard/
+│   └── data-flow.mmd                  # Mermaid diagram source
 
 ---
 
@@ -101,23 +115,27 @@ barnebys-pilot-olsens-analysis/
 
 | Table Name | Description | Record Count* |
 |------------|-------------|---------------|
-| `proc_bids_cleaned_complete` | Cleaned bids + 126 synthetic records | 67,333 |
-| `temp_bids_with_enteredbid_match_complete` | Bids with WebUserid & source inference | 67,333 |
-| `proc_bids_with_winning_version3_complete` | Bids with winning flags & commissions | 67,333 |
-| `summary_by_user_source` | Final metrics by user source (long format) | 45 rows |
+| `proc_skeleton_auctions_with_enteredbids` | All bids matched to EnteredBid records with WebUserid & source inference | 67,286 |
+| `proc_skeleton_auctions_with_winning` | Bids with winning flags, value replacement & commissions | 53,226 |
+| `ana_funnel_olsens_exclued67` | Final funnel metrics by user source (excl. Jun & Jul) | 64 rows |
+| `ana_lot_price_tiers` | Lot-level price tier classification (Low / Mid / High) | 13,198 |
+| `ana_bids_with_price_tier` | All bids enriched with price tier info | 67,286 |
+| `ana_winning_bids_with_price_tier` | All winning bids enriched with price tier info | 53,226 |
+| `ana_barnebys_increment` | Lot-level Barnebys price increment contribution | 10289 |
 
-*Approximate counts - verify after execution
 
 ### Input Tables (Pre-existing)
 
-| Table Name | Description | Source System |
+| Table Name | Description | Record Count* |
 |------------|-------------|---------------|
-| `raw_hammer_initial_price` | Winning bids & prices | Olséns |
-| `raw_enteredbid` | All user bids | Skeleton |
-| `raw_lots` | Auction lot metadata | Olséns |
-| `raw_click` | Click events | Bite |
-| `raw_registration` | User registrations | Skeleton |
-
+| `bite_raw_clicks` | Raw click from Bite tracking | 61,937 |
+| `bite_raw_registrations` | Raw user registration events from Bite | 2,724 |
+| `bite_raw_bids` | Raw bid events from Bite | 76,400 |
+| `skeleton_raw_auctions` | Raw auction & inventoryid records from Skeleton | 18,553 |
+| `skeleton_raw_enteredbids` | Raw enteredbid records from Skeleton | 72,209 |
+| `aws_barnebys_raw_lots` | Raw lot data from AWS source | 9,551 |
+| `azure_barnebys_raw_lots` | Raw lot data from Azure source | 9,482 |
+| `auction_house` | Auction house reference data incl. Skeleton client flag | 55 rows |
 
 ---
 
@@ -134,8 +152,6 @@ Covers:
 - Known data quality issues
 - Troubleshooting guide
 
-**Data Dictionary**:  
-See [docs/data-dictionary.md](docs/data-dictionary.md)
 
 ---
 
@@ -143,20 +159,45 @@ See [docs/data-dictionary.md](docs/data-dictionary.md)
 
 ### Key Features
 
-1. **Synthetic Record Creation**  
-   126 winning lots were missing from bid tracking. Created synthetic records with:
-   - `value` = `hammeredprice` (from auction results)
-   - `timestamp` = `enddate` (auction end time)
-   - `source` = inferred from user's bid history
+1. **Lot Deduplication**  
+   AWS and Azure lot sources are merged and deduplicated. For the same inventoryId, only the record with the latest created timestamp is kept.
 
-2. **Source Inference Algorithm**  
-   For users with missing source:
-   - Count `barnebys` vs `other` bids across all lots
-   - Assign majority source (tie → use first bid source)
+2. **Bite Bids Deduplication**  
+   For the same inventoryId + value combination, only the earliest bid (first timestamp) is retained to avoid double-counting repeated bid events.
 
-3. **User Source Classification**
-   - `user_source_byfirstbid`: Based on user's first bid ever (one-way: Barnebys stays Barnebys)
-   - `user_source_by_first_bid`: Based on user's first bid on each lot (for winning analysis)
+3. **EnteredBid Matching**
+   Bite bids are matched to Skeleton's EnteredBid records to retrieve WebUserid and EnteredBidId. Two matching strategy:
+   - Strict match: inventoryId + amount + timestamp difference ≤ 1 second
+   - Relaxed match: inventoryId + amount only, keeping the closest timestamp
+
+4. **Winning Record Handling**
+   Skeleton auction results contain winning bids not captured in Bite. 
+   These are handled by: 
+   - Splitting records into Bite records (url IS NOT NULL) and winning records (url IS NULL) Winning records are filled directly from auction data: EnteredBidId ← bidid, WebUserid ← winnerid
+
+5. **Source Inference**
+   For records where source is still NULL after matching, source is inferred from the user's full bid history:
+   - Count barnebys vs other bids across all lots for that WebUserid
+   - Majority source wins; if tied, use the source from the user's earliest bid
+
+6. **Winning Sign Assignment**
+   Three-rule hierarchy to flag each bid as win or not_win:
+   - Rule 1 (explicit): enteredbidId = bidid → win
+   - Rule 2 (inferred): No bidid match → value >= hammeredprice → win
+   - Rule 3 (synthetic): No win found at all and max(value) < hammeredprice → create one synthetic win record with value = hammeredprice 
+
+7. **User Source Classification**
+    ‘user_source_byfirstbid’ Based on user's first-ever bid in each lot. Once classified as Barnebys, always Barnebys.
+   
+
+8. **Price Tier Classification**
+   Each lot is assigned a price tier based on the distribution of max_bid_price (highest of hammeredprice or value) across all lots:
+   | Tier | Percentile Range |
+   |------|------------------|
+   | `Low` | Bottom 50% | 
+   | `Mid` | 50% – 80% |
+   | `High` | Top 20% |
+
 
 ---
 
@@ -181,24 +222,15 @@ See [docs/data-dictionary.md](docs/data-dictionary.md)
 
 ## 📈 Next Steps
 
-1. **Generate Insights Report**  
-   Analyze metrics to identify Barnebys value-add patterns
-
-2. **Expand to More Auction Houses**  
+1. **Expand to More Auction Houses**  
    Apply pipeline to additional auction houses
 
-3. **Automate Pipeline**  
+2. **Automate Pipeline**  
    Schedule regular updates for ongoing analysis
 
-4. **Enhance Attribution**  
-   Incorporate multi-touch attribution models
 
-
-
-### Latest Version: v1.0 (2025-02-20)
+### Latest Version: v1.0 (2025-02-25)
 - Initial release
 - Complete data processing pipeline
 - Summary metrics by user source
-- Validation queries
 
-# pilot-olsens
