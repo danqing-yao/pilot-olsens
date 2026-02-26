@@ -71,7 +71,7 @@ Copy-paste each script from the `sql/` directory into the BigQuery editor and ex
 # Step 5: Generate Dashboard in Looker Studio
 
 
-----
+---
 
 ## 📁 Repository Structure
 ```
@@ -109,7 +109,7 @@ barnebys-pilot-olsens-analysis/
 │   └── data-flow.mmd                  # Mermaid diagram source
 
 ```
------
+---
 
 ## 🗂️ Key Tables
 
