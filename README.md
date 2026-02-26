@@ -70,7 +70,8 @@ Copy-paste each script from the `sql/` directory into the BigQuery editor and ex
 
 # Step 5: Generate Dashboard in Looker Studio
 
----
+
+----
 
 ## 📁 Repository Structure
 ```
@@ -107,7 +108,8 @@ barnebys-pilot-olsens-analysis/
 └── Dashboard/
 │   └── data-flow.mmd                  # Mermaid diagram source
 
----
+```
+-----
 
 ## 🗂️ Key Tables
 
@@ -142,15 +144,17 @@ barnebys-pilot-olsens-analysis/
 ## 📚 Documentation
 
 **Detailed Technical Documentation**:  
-[Link to Google Doc] *(Add your Google Doc link here)*
+https://docs.google.com/document/d/1xyQ4oq-Y7hGf1vLuLIvLmRXMm5dx2zQ1WeLDUqG5z9U/edit?usp=sharing
 
 Covers:
-- Business context & objectives
-- Data architecture & flow
-- Key concepts & definitions
-- Detailed metric calculations
-- Known data quality issues
-- Troubleshooting guide
+- Business context
+- Data architecture
+- Data processing logic
+- Metrics definitions
+- Limitations
+- SQL scripts reference
+- Long-term Strategy and scalability
+- Appendix
 
 
 ---
@@ -166,22 +170,22 @@ Covers:
    For the same inventoryId + value combination, only the earliest bid (first timestamp) is retained to avoid double-counting repeated bid events.
 
 3. **EnteredBid Matching**
-   Bite bids are matched to Skeleton's EnteredBid records to retrieve WebUserid and EnteredBidId. Two matching strategy:
+    Bite bids are matched to Skeleton's EnteredBid records to retrieve WebUserid and EnteredBidId. Two matching strategy:
    - Strict match: inventoryId + amount + timestamp difference ≤ 1 second
    - Relaxed match: inventoryId + amount only, keeping the closest timestamp
 
 4. **Winning Record Handling**
-   Skeleton auction results contain winning bids not captured in Bite. 
-   These are handled by: 
+    Skeleton auction results contain winning bids not captured in Bite. 
+    These are handled by: 
    - Splitting records into Bite records (url IS NOT NULL) and winning records (url IS NULL) Winning records are filled directly from auction data: EnteredBidId ← bidid, WebUserid ← winnerid
 
 5. **Source Inference**
-   For records where source is still NULL after matching, source is inferred from the user's full bid history:
+    For records where source is still NULL after matching, source is inferred from the user's full bid history:
    - Count barnebys vs other bids across all lots for that WebUserid
    - Majority source wins; if tied, use the source from the user's earliest bid
 
 6. **Winning Sign Assignment**
-   Three-rule hierarchy to flag each bid as win or not_win:
+    Three-rule hierarchy to flag each bid as win or not_win:
    - Rule 1 (explicit): enteredbidId = bidid → win
    - Rule 2 (inferred): No bidid match → value >= hammeredprice → win
    - Rule 3 (synthetic): No win found at all and max(value) < hammeredprice → create one synthetic win record with value = hammeredprice 
@@ -191,7 +195,7 @@ Covers:
    
 
 8. **Price Tier Classification**
-   Each lot is assigned a price tier based on the distribution of max_bid_price (highest of hammeredprice or value) across all lots:
+    Each lot is assigned a price tier based on the distribution of max_bid_price (highest of hammeredprice or value) across all lots:
    | Tier | Percentile Range |
    |------|------------------|
    | `Low` | Bottom 50% | 
@@ -203,21 +207,25 @@ Covers:
 
 ## ⚠️ Known Issues & Limitations
 
-### Data Quality
-- **126 missing lots** (1.2% of total): Bid events not tracked in Bite system, likely phone/in-person bids
-- **June-July 2025 excluded**: Incomplete data for these months
+### InventoryId Extraction Consistency
+    Olséns has a relatively clean and consistent URL structure, making inventoryId extraction straightforward. However, across other auction houses, URL formats vary significantly and may require custom parsing logic per auction house. Non-standard or malformed URLs risk extraction failures or incorrect inventoryId mapping, which would cause bid records to go unmatched.
 
-### Matching Rates
-- **Strict match** (inventoryId + amount + timestamp ±1s): ~99%
-- **Relaxed match** (inventoryId + amount only): ~1%
-- **Unmatched**: <0.1%
+### SessionId as User Identifier    
+    Even with stricter fingerprint rules by the new logic, a single user can still generate multiple sessionIds across sessions (e.g. browser changes, cookie expiry, device switching). The current fingerprinting cycle resets every 30 days. Using sessionId as a proxy for unique users will therefore undercount returning users and overstate unique visitor numbers. WebUserid and winnerid (from Skeleton matching) is a more reliable user identifier where available.
 
-### User Source Limitations
-- `uncertain` category: Users with no clear source attribution (no bid history)
-- Fingerprinting system has 30-day expiration → some users may be misclassified
+### Incomplete Bite Coverage
+    Bite tracking does not capture all bid records. 88 winning lots had no any Bite records, 136 winning lots had no hammer records, requiring synthetic record creation. 
+
+### Source Inference Reliability
+    For users with no directly attributed source, source is inferred from majority bid history. This may misclassify users who switch between Barnebys and non-Barnebys sessions, or users with very few historical bids where the majority signal is weak.
+
+### Skeleton Settlement Timing
+    Skeleton settles commission based on auction enddate, not individual bid timestamps. Auctions spanning month or year boundaries mean some bids placed in December are counted in January of the following year. 
+    - Bite Bids extraction period (Dec 2024 – Dec 2025)
+    - Barnebys(AWS & Azure) Lots extraction period (Dec 2024 – Dec 2025)
+    - Skeleton extraction period (auction enddate Jan 2025 - Dec 2025)
 
 ---
-
 
 
 ## 📈 Next Steps
