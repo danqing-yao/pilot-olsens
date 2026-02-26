@@ -1,0 +1,27 @@
+-- Query 3687 registration data 2025
+WITH extracted_data AS (
+  SELECT
+    programId,
+    category,
+    action,
+    source,
+    sessionId,
+    timestamp,
+  FROM `barnebys-analytics.tracking.events`
+  WHERE
+    timestamp >= DATETIME("2025-01-01")
+    AND timestamp < DATETIME("2026-01-01")
+    AND programId = '3687'
+    AND category = 'registration'
+    AND action = 'completed'
+)
+
+SELECT
+  programId,
+  category,
+  action,
+  source,
+  sessionId,
+  timestamp
+FROM extracted_data
+ORDER BY timestamp;
