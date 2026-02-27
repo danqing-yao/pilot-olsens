@@ -70,7 +70,10 @@ bq query < sql/03_analytics_layer/ana_winning_bids_with_price_tier.sql
 bq query < sql/03_analytics_layer/ana_barnebys_increment.sql
 ```
 
-> **Alternatively**, copy-paste each script from the `sql/` directory directly into the BigQuery Console and execute in order.
+> **Alternatively**
+- Copy-paste each script in step 1 from the `sql/`directory into each database and execute them, export .csv files for each.
+- Upload all the files in Step 1 to BigQuery database`pilot_olsens` or your own database
+- copy-paste each script in step 2-4 from the `sql/` directory directly into the BigQuery Console and execute in order.
 
 ```bash
 # Step 5: Generate Dashboard in Looker Studio
