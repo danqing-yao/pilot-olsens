@@ -84,7 +84,7 @@ bq query < sql/03_analytics_layer/ana_barnebys_increment.sql
 ## 📁 Repository Structure
 
 ```
-barnebys-pilot-olsens-analysis/
+pilot-olsens/
 ├── README.md
 ├── sql/
 │   ├── 01_raw_layer/
@@ -108,14 +108,11 @@ barnebys-pilot-olsens-analysis/
 │       ├── ana_winning_bids_with_price_tier.sql
 │       └── ana_barnebys_increment.sql
 ├── docs/
-│   ├── data-architecture.md
-│   ├── data-dictionary.md
-│   ├── processing-logic.md
-│   └── changelog.md
-├── diagrams/
-│   └── data-flow.mmd
-└── Dashboard/
-    └── data-flow.mmd
+│   ├── Pilot_Olséns_tech_doc.pdf
+└── diagrams/
+    └── skeleton_data_structure.png
+
+
 ```
 
 ---
