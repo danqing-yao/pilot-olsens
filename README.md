@@ -97,6 +97,7 @@ pilot-olsens/
 │   │   ├── azure_barnebys_raw_lots.sql
 │   │   └── auction_house.csv
 │   ├── 02_processed_layer/
+│   │   ├── raw_bbys_lots.sql
 │   │   ├── raw_bite_bids_clean.sql
 │   │   ├── proc_skeleton_auctions_with_bite_bids.sql
 │   │   ├── proc_skeleton_auctions_with_enteredbids.sql
